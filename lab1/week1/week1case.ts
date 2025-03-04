@@ -1,4 +1,4 @@
-async function a(b:number, c:any):number {
+async function a() {
     x = b;
     x = c;
 }
