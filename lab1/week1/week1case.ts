@@ -1,4 +1,4 @@
 async function a() {
-    a = b;
-    b = c;
+    x = b;
+    x = c;
 }
