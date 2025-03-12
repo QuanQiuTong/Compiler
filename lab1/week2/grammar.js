@@ -67,24 +67,29 @@ module.exports = grammar({
             optional($._semicolon),
           )),
         
-        call_signature: $ => seq(
-            //week2任务，函数的调用签名，包括参数与返回类型
-        ),
-        formal_parameters: $ => seq(
-            '(',
-            //week2任务，支持简单参数，包括类型注解
-            ')',
-        ),
-
-
-
-        type_annotation: $ => seq(
-            ':',$.primitive_type,
-        ),
 
         primitive_type: _ => choice(
             'any', 'number','boolean','string','symbol','void','unknown','string','never','object',
         ),
+                
+	    //参数的类型注释。匹配的内容为 :number或:any
+        type_annotation: $ => seq(
+            ':',$.primitive_type,
+        ),
+
+        formal_parameters: $ => seq(
+            '(',
+            //week2任务，支持简单参数，包括类型注解。匹配的内容为 (b:number, c:any)
+            //hint1: 匹配零个或多个由逗号分隔的元素，可以使用辅助函数commaSep
+            //hint2："$."用于引用当前grammar.js中定义的其他语法规则，如$.type_annotation->引用名为type_annotation的规则
+            ')',
+        ),
+
+        call_signature: $ => seq(
+            //week2任务，函数的调用签名，包括参数与返回类型 。匹配的内容为 (b:number, c:any):void
+        ),
+
+
         statement_block: $ => prec.right(seq(
             '{',
             repeat($.statement),
