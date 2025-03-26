@@ -5,11 +5,15 @@ module.exports = grammar({
         /\s/,  // Whitespace
         /[\s\p{Zs}\uFEFF\u2028\u2029\u2060\u200B]/,
     ],
-    // precedences: $ => [
+    precedences: $ => [
+    [
+      'binary_times',
+      'binary_plus',
+      'binary_relation',
+      'binary_equality',
+    ],
+  ],
 
-    //     ['declaration', 'literal'],
-
-    // ],
     word: $ => $.identifier,
     rules: {
         program: $ => seq(
@@ -34,20 +38,11 @@ module.exports = grammar({
 
         binary_expression: $ => choice(
       ...[
-        ['&&', 'logical_and'],
-        ['||', 'logical_or'],
-        ['>>', 'binary_shift'],
-        ['>>>', 'binary_shift'],
-        ['<<', 'binary_shift'],
-        ['&', 'bitwise_and'],
-        ['^', 'bitwise_xor'],
-        ['|', 'bitwise_or'],
         ['+', 'binary_plus'],
         ['-', 'binary_plus'],
         ['*', 'binary_times'],
         ['/', 'binary_times'],
         ['%', 'binary_times'],
-        ['**', 'binary_exp', 'right'],
         ['<', 'binary_relation'],
         ['<=', 'binary_relation'],
         ['==', 'binary_equality'],
@@ -56,9 +51,6 @@ module.exports = grammar({
         ['!==', 'binary_equality'],
         ['>=', 'binary_relation'],
         ['>', 'binary_relation'],
-        ['??', 'ternary'],
-        ['instanceof', 'binary_relation'],
-        ['in', 'binary_relation'],
       ].map(([operator, precedence, associativity]) =>
         (associativity === 'right' ? prec.right : prec.left)(precedence, seq(
           // week4 识别二元操作binary_expression
