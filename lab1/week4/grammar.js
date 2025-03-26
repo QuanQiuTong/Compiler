@@ -61,9 +61,7 @@ module.exports = grammar({
         ['in', 'binary_relation'],
       ].map(([operator, precedence, associativity]) =>
         (associativity === 'right' ? prec.right : prec.left)(precedence, seq(
-          field('left', operator === 'in' ? choice($.expression, $.private_property_identifier) : $.expression),
-          field('operator', operator),
-          field('right', $.expression),
+          // week4 识别二元操作binary_expression
         )),
       ),
     ),
