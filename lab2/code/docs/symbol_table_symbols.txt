@@ -1,0 +1,31 @@
+    def __init__(self):
+        self.global_symbol_id = 1
+
+        mycolumns = [
+            "symbol_id", "parent_symbol_id", "symbol_type", "name", "alias",
+            "glang_path", "file_ext", "symbol_scope_table_path",
+            "control_flow_graph_path", "abstract_state_graph_path", "method_summary_path",
+        ]
+        self.module_symbol_table = pd.DataFrame(columns=mycolumns)
+
+        mycolumns = [
+            "unit_id", "symbol_id", "parent_symbol_id", "symbol_type", "stmt_id",
+            "package", "imported_symbol", "imported_symbol_id",
+            "attr", "variable_type", "variable",
+            "method_return_type", "method", "method_signature",
+            "class_decl", "parent_class", "parent_class_id",
+            "is_override", "field", "field_type",
+            "class_method_return_type", "class_method", "class_method_signature",
+        ]
+        self.global_symbol_table = pd.DataFrame(columns=mycolumns)
+
+        mycolumns = [
+            "unit_id", "method_id", "parameter", "local_scope", "global_scope"
+        ]
+        self.symbol_scope_table = pd.DataFrame(columns=mycolumns)
+
+        mycolumns = [
+            "unit_id", "method_id", "parameters", "ins", "outs", "context"
+        ]
+        self.method_summary_table = pd.DataFrame(columns=mycolumns)
+        
