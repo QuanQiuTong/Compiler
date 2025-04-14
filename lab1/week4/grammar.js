@@ -18,7 +18,8 @@ module.exports = grammar({
   // 处理冲突
   conflicts: $ => [
     [$.update_expression, $.expression_statement],
-    [$.update_expression, $.variable_declaration]
+    [$.update_expression, $.variable_declaration],
+    [$.variable_declaration], // 变量声明可能含分号
   ],
 
   word: $ => $.identifier,
@@ -41,6 +42,15 @@ module.exports = grammar({
 
     for_statement: $ => seq(
       // week4 for语句
+      'for',
+      '(',
+            optional(field('init', choice($.declaration, $.expression))),
+      ';',
+            optional(field('condition', $.expression)),
+      ';',
+            optional(field('update', $.expression)),
+      ')',
+            field('body', $.statement),
     ),
 
     binary_expression: $ => choice(
@@ -61,6 +71,9 @@ module.exports = grammar({
       ].map(([operator, precedence, associativity]) =>
         (associativity === 'right' ? prec.right : prec.left)(precedence, seq(
           // week4 识别二元操作binary_expression
+          field('left', $.expression),
+          field('operator', operator),
+          field('right', $.expression),
         )),
       ),
     ),
@@ -77,24 +90,40 @@ module.exports = grammar({
     )),
 
     if_statement: $ => prec.right(seq(
-      //week3 if语句
-    )),
+      'if',
+      field('condition', $.parenthesized_expression),
+      field('consequence', $.statement),
+      optional(field('alternative', $.else_clause))
+  )),
+
+        else_clause: $ => seq(
+            'else',
+            $.statement
+        ),
 
     parenthesized_expression: $ => seq(
-      //week3 括号表达式,勇于if_statement的条件部分
+            '(',
+            $.expression,
+            ')',
     ),
 
     variable_declaration: $ => seq(
-      //week3 变量声明
+            choice('let', 'const', 'var'),
+            commaSep1(seq(
+              field('name', $.identifier),
+              optional(field('type', $.type_annotation)),
+              optional(seq('=',field('value', $.expression))
+            ))
+          ),
+            optional($._semicolon),
     ),
 
 
 
     number: _ => {
-      //week2任务，10、16进制数的正则表达式
-      const hex_literal = ;
+          const hex_literal = /0[xX][0-9A-Fa-f]+/;
 
-      const decimal_digits = ;
+          const decimal_digits = /[0-9]+/;
 
       return token(choice(
         hex_literal,
@@ -135,17 +164,18 @@ module.exports = grammar({
     )),
 
     call_signature: $ => seq(
-      //week2任务，函数的调用签名，包括参数与返回类型
-
+            field('parameter', $.formal_parameters),
+            optional(field('return_type', $.type_annotation))
     ),
     formal_parameters: $ => seq(
       '(',
-      //week2
+            optional(commaSep($.required_parameter)),
       ')',
     ),
     required_parameter: $ => seq(
-      $.identifier,
-      field('type', optional($.type_annotation)),
+      field('name', $.identifier),
+      optional(field('type', $.type_annotation)),
+      optional(seq('=', $.expression))  // 支持默认值
     ),
 
 
