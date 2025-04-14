@@ -16,7 +16,7 @@ module.exports = grammar({
           optional($.hash_bang_line),
           repeat($.statement),
         ),
-    
+
         hash_bang_line: _ => /#!.*/,
 
         statement: $ => choice(
@@ -27,11 +27,11 @@ module.exports = grammar({
 
         number: _ => {
           //week2任务，16进制数的正则表达式
-          const hex_literal = ;
+          const hex_literal = /0[xX][0-9A-Fa-f]+/;
 
           //week2任务，10进制数的正则表达式
-          const decimal_digits = ;
-    
+          const decimal_digits = /[0-9]+/;
+
           return token(choice(
             hex_literal,
             decimal_digits,
@@ -66,12 +66,12 @@ module.exports = grammar({
             field('body', $.statement_block),
             optional($._semicolon),
           )),
-        
+
 
         primitive_type: _ => choice(
             'any', 'number','boolean','string','symbol','void','unknown','string','never','object',
         ),
-                
+
 	    //参数的类型注释。匹配的内容为 :number或:any
         type_annotation: $ => seq(
             ':',$.primitive_type,
@@ -79,6 +79,10 @@ module.exports = grammar({
 
         formal_parameters: $ => seq(
             '(',
+            optional(commaSep(seq(
+                field('name', $.identifier),
+                field('type', $.type_annotation)
+            ))),
             //week2任务，支持简单参数，包括类型注解。匹配的内容为 (b:number, c:any)
             //hint1: 匹配零个或多个由逗号分隔的元素，可以使用辅助函数commaSep
             //hint2："$."用于引用当前grammar.js中定义的其他语法规则，如$.type_annotation->引用名为type_annotation的规则
@@ -86,6 +90,8 @@ module.exports = grammar({
         ),
 
         call_signature: $ => seq(
+            field('parameter', $.formal_parameters),
+            field('return_type', $.type_annotation)
             //week2任务，函数的调用签名，包括参数与返回类型 。匹配的内容为 (b:number, c:any):void
         ),
 
@@ -97,7 +103,7 @@ module.exports = grammar({
             optional($._semicolon),
         )),
 
-          
+
         comment: $ => choice(
             token(choice(
             seq('//', /.*/),
@@ -109,25 +115,25 @@ module.exports = grammar({
             )),
         ),
 
-        
-        
-        identifier: $ => /[_a-zA-Z][_a-zA-Z0-9]*/, 
-        
+
+
+        identifier: $ => /[_a-zA-Z][_a-zA-Z0-9]*/,
+
         // 分号
         _semicolon: $ => ';',
 
     }
-    
+
 })
 
 function commaSep1(rule) {
     return seq(rule, repeat(seq(',', rule)));
   }
-  
+
   function commaSep(rule) {
     return optional(commaSep1(rule));
   }
-  
+
   function sepBy1(sep, rule) {
     return seq(rule, repeat(seq(sep, rule)));
   }
