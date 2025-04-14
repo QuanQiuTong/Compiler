@@ -1,0 +1,9 @@
+*.md
+
+# tree-sitter生成的
+lab1/week*/src
+
+tree_sitter
+grammar.json
+node-types.json
+parser.c
