@@ -24,28 +24,48 @@ module.exports = grammar({
             $.statement_block,
             $.expression_statement,
             $.statement_block,
-            $.if_statement
+            $.if_statement,
+            seq('return', $.expression, $._semicolon),
+            seq($.identifier, choice('+', '-', '*', '/'), $.expression)
         ),
 
         if_statement: $ => prec.right(seq(
             //week3 if语句
+            'if',
+            field('condition', $.parenthesized_expression),
+            field('consequence', $.statement),
+            optional(field('alternative', $.else_clause))
         )),
+
+        else_clause: $ => seq(
+            'else',
+            $.statement
+        ),
        
         parenthesized_expression: $ => seq(
-            //week3 括号表达式,勇于if_statement的条件部分
+            '(',
+            $.expression,
+            ')',
         ),
 
         variable_declaration: $ => seq(
-            //week3 变量声明
+            choice('let', 'const', 'var'),
+            field('name', $.identifier),
+            optional(
+                field('type', $.type_annotation)
+            ),
+            optional(seq('=',
+                field('value', $.expression)
+            )),
+            optional($._semicolon),
         ),
 
        
 
         number: _ => {
-          //week2任务，10、16进制数的正则表达式
-          const hex_literal = ;
+          const hex_literal = /0[xX][0-9A-Fa-f]+/;
     
-          const decimal_digits = ;
+          const decimal_digits = /[0-9]+/;
     
           return token(choice(
             hex_literal,
@@ -84,17 +104,17 @@ module.exports = grammar({
           )),
         
         call_signature: $ => seq(
-            //week2任务，函数的调用签名，包括参数与返回类型
-          
+            field('parameter', $.formal_parameters),
+            optional(field('return_type', $.type_annotation))
         ),
         formal_parameters: $ => seq(
             '(',
-            //week2
+            optional(commaSep(seq(
+                field('name', $.identifier),
+                optional(field('type', $.type_annotation)),
+                optional(seq('=', $.expression))  // 支持默认值
+            ))),
             ')',
-        ),
-        required_parameter: $ => seq(
-            $.identifier,
-            field('type', optional($.type_annotation)),
         ),
 
 
