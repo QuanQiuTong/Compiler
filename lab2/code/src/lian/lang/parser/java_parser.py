@@ -282,7 +282,7 @@ class Parser(common_parser.Parser):
 
         statements.append(
             {"method_decl": {"attr": modifiers, "data_type": mytype, "name": name, "type_parameters": type_parameters,
-                             "parameters": new_parameters, "init": init, "body": new_body}})
+                             "parameters": init, "body": new_body}})
 
     def package_declaration(self, node, statements):
         name = self.read_node_text(node.named_children[0])

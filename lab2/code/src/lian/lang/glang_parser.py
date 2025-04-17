@@ -143,6 +143,7 @@ class GLangProcess:
 
 PARSERS = {
     "java"      	: java_parser,
+    "typescript"    : typescript_parser,
 }
 
 def parse(options, file_path):
