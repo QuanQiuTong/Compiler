@@ -214,3 +214,19 @@ class Parser:
                 ret = self.parse(node.named_children[i], statements, replacement)
                 if i + 1 == size:
                     return ret
+                
+    def print_tree(self, node, level=0, field = None):
+        if not node:
+            return
+        if field:
+            print("   "*level + field, ":", node.type)
+        else:
+            print("   "*level + node.type + f"({node.text[:40]})")
+        children = node.children
+        for index, child in enumerate(children):
+            if child.is_named:
+                child_field = node.field_name_for_child(index)
+                if child_field:
+                    self.print_tree(child, level + 1, child_field)
+                else:
+                    self.print_tree(child, level + 1)
