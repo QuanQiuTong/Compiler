@@ -168,6 +168,8 @@ def parse(options, file_path):
         with open(file_path, 'r') as f:
             code = f.read()
         tree = tree_sitter_parser.parse(bytes(code, 'utf8'))
+        print(tree.root_node) # show AST
+
     except:
         util.error("Failed to parse AST:", file_path)
         return
