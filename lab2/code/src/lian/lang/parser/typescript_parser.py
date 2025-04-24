@@ -40,6 +40,11 @@ class Parser(common_parser.Parser):
             "function_declaration": self.method_declaration,
             "method_signature": self.method_declaration,
             "function_signature": self.method_declaration,
+            "class_declaration": self.class_declaration,
+            "public_field_definition": self.public_field_definition,
+            "method_definition": self.method_declaration,
+
+
         }
         return DECLARATION_HANDLER_MAP.get(node.type, None)
 
@@ -55,6 +60,8 @@ class Parser(common_parser.Parser):
             "assignment_expression": self.assignment_expression,
             "assignment_pattern": self.assignment_expression,  # "assignment_pattern" is a special case of "assignment_expression
             "function_expression": self.method_declaration,
+            "binary_expression": self.binary_expression,
+            "member_expression": self.member_expression,
         }
 
         return EXPRESSION_HANDLER_MAP.get(node.type, None)
@@ -69,6 +76,8 @@ class Parser(common_parser.Parser):
     def check_statement_handler(self, node):
         STATEMENT_HANDLER_MAP = {
             "statement_block": self.statement_block,
+            "return_statement": self.return_statement,
+
         }
         return STATEMENT_HANDLER_MAP.get(node.type, None)
 
@@ -124,6 +133,7 @@ class Parser(common_parser.Parser):
 
         shadow_right = self.parse(right, statements)
 
+        #week3任务，需要支持left为object.property的形式，可以用parser_field函数帮助解析
         if left.type in ["member_expression", "subscript_expression"]:
             pass
 
@@ -136,6 +146,7 @@ class Parser(common_parser.Parser):
         return shadow_left
 
 
+    
     def pattern(self, node: Node, statements: list):
         return self.parse(self.node.named_children[0], statements)
 
@@ -160,6 +171,7 @@ class Parser(common_parser.Parser):
         child = self.find_child_by_field(node, "name")
         name = self.read_node_text(child)
 
+        #week3任务，需要支持参数，可以用formal_parameter函数帮助解析
 
         new_body = []
         child = self.find_child_by_field(node, "body")
@@ -173,15 +185,63 @@ class Parser(common_parser.Parser):
         statements.append(
             {"method_decl": {"data_type": mytype, "name": name,
                              "body": new_body}})
+    # 解析object.property形式
+    def parse_field(self, node: Node, statements: list):
+        myobject = self.find_child_by_field(node, "object")
+        field = self.find_child_by_field(node, "property")
+        shadow_object = self.parse(myobject, statements)
+        shadow_field = self.parse(field, statements)
+        return (shadow_object, shadow_field)
+    
+    def formal_parameter(self, node: Node, statements: list):
+        #week3任务，解析参数
+        pass
 
+    def class_declaration(self, node: Node, statements: list):
+        #week3任务，解析class,class_body部分可用class_body函数帮助解析
+        pass
 
+    def class_body(self, node, gir_node):
+        #week3任务，解析class_body部分，需要解析类的字段与成员函数
+        pass
+                   
+    def public_field_definition(self, node: Node, statements: list):
+        #week3任务, 解析类的字段
+        pass
 
+    # field_read表达式，解析如this.name操作，返回临时变量
+    def member_expression(self, node: Node, statements: list,flag = 0):
+        obj = self.parse(self.find_child_by_field(node, "object"), statements)
+        property_ = self.parse(self.find_child_by_field(node, "property"), statements)
+        tmp_var = self.tmp_variable(node)
+        statements.append({"field_read": {"target": tmp_var, "receiver_object": obj, "field": property_}})
+        return tmp_var
+
+    # 二元表达式，解析如a + b操作，返回临时变量
+    def binary_expression(self, node: Node, statements: list):
+        operator = self.find_child_by_field(node, "operator")
+        shadow_operator = self.read_node_text(operator)
+        right = self.find_child_by_field(node, "right")
+        shadow_right = self.parse(right, statements)
+        left = self.find_child_by_field(node, "left")
+        shadow_left = self.parse(left, statements)
+
+        tmp_var = self.tmp_variable(node)
+        statements.append({"assign_stmt": {"target": tmp_var, "operator": shadow_operator, "operand": shadow_left,
+                                        "operand2": shadow_right}})
+        return tmp_var
+    # return语句，解析如return a操作，返回临时变量
+    def return_statement(self, node: Node, statements: list):
+        shadow_name = ""
+        if node.named_child_count > 0:
+            name = node.named_children[0]
+            shadow_name = self.parse(name, statements)
+
+        statements.append({"return_stmt": {"name": shadow_name}})
+        return shadow_name
+        
     def function_expression(self, node: Node, statements: list):
         return self.method_declaration(node, statements)
-
-
-
-
 
     def statement_block(self, node: Node, statements: list):
         children = node.named_children
@@ -190,7 +250,7 @@ class Parser(common_parser.Parser):
                 continue
             self.parse(child, statements)
 
-
-
     def expression_statement(self, node: Node, statements: list):
         return self.parse(node.named_children[0], statements)
+
+
