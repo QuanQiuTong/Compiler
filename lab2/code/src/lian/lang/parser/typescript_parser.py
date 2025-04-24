@@ -117,8 +117,23 @@ class Parser(common_parser.Parser):
         self.parse(node.named_children[0], statements)
 
     def assignment_expression(self, node: Node, statements: list):
-        # week2 assignment
-        pass        
+        left = self.find_child_by_field(node, "left")
+        right = self.find_child_by_field(node, "right")
+        operator = self.find_child_by_field(node, "operator")
+        shadow_operator = self.read_node_text(operator).replace("=", "")
+
+        shadow_right = self.parse(right, statements)
+
+        if left.type in ["member_expression", "subscript_expression"]:
+            pass
+
+        shadow_left = self.read_node_text(left)
+        if not shadow_operator:
+            statements.append({"assign_stmt": {"target": shadow_left, "operand": shadow_right}})
+        else:
+            statements.append({"assign_stmt": {"target": shadow_left, "operator": shadow_operator,
+                                               "operand": shadow_left, "operand2": shadow_right}})
+        return shadow_left
 
 
     def pattern(self, node: Node, statements: list):
@@ -137,10 +152,27 @@ class Parser(common_parser.Parser):
             sequence_list.append(self.parse(sub_expression, statements))
         return sequence_list
 
-    def method_declaration(self,node,statements):
-        #week2 assignment
-        pass
+    def method_declaration(self, node: Node, statements: list):
+        child = self.find_child_by_field(node, "return_type")
+        # 去掉冒号
+        mytype = self.read_node_text(child.named_children[0])
 
+        child = self.find_child_by_field(node, "name")
+        name = self.read_node_text(child)
+
+
+        new_body = []
+        child = self.find_child_by_field(node, "body")
+        if child:
+            for stmt in child.named_children:
+                if self.is_comment(stmt):
+                    continue
+
+                self.parse(stmt, new_body)
+
+        statements.append(
+            {"method_decl": {"data_type": mytype, "name": name,
+                             "body": new_body}})
 
 
 
