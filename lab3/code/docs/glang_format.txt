@@ -1,0 +1,55 @@
+statements	fields									
+program	name	body								
+namespace_stmt	body									
+comment_stmt	data									
+package_stmt	name									
+import_stmt	name									
+import_as_stmt	name	alias								
+require_stmt	name									
+use_stmt	name									
+class_decl	attr	name	supers	type_parameters	static_init	init	fields	member_methods	nested	static_member_field -> static_init -> member_field -> init -> constructuor
+record_decl	attr	name	supers	type_parameters	static_init	init	fields	member_methods	nested	parameters
+interface_decl	attr	name	supers	type_parameters	static_init	init	fields	member_methods	nested	
+enum_decl	attr	name	supers		static_init	init	fields	member_methods	nested	enum_constants
+enum_constants	attr	name		args						
+annotation_type_decl	attr	name				init	fields		nested	annotation_type_elements
+annotation_type_elements_decl	attr	data_type	name	value						
+struct_decl	attr	name	fields							
+parameter_decl	attr	data_type	name	value						
+variable_decl	attr	data_type	name	value						
+slice_decl		target	start	end	step					
+method_decl	attr	data_type	name	parameters	init	body				
+assign_stmt	data_type	target	operator	operand	operand2					
+array_write	array	index	source							
+array_read	target	array	index							
+field_write	receiver_object	field	source							
+field_read	target	receiver_object	field							
+call_stmt	name	data_type	prototype	args			target			
+return_stmt	target									
+if_stmt	condition	condition_body	body	elsebody						
+dowhile_stmt	condition		body							
+while_stmt	condition	body								
+for_stmt	init	condition	condition_body	step	body					
+forin_stmt	attr	data_type	name	target	body					
+switch_stmt	condition	body								
+case_stmt	condition	init	body							
+default_stmt	body									
+break_stmt	target									
+continue_stmt	target									
+goto_stmt	target									
+yield_stmt	target									
+sync_stmt										
+throw_stmt	target									
+try_stmt	body									
+catch_stmt	body									
+final_stmt	body									
+label_stmt	name									
+assert_stmt	condition									
+body	stmt_id	parent_stmt_id								
+body_start	stmt_id	parent_stmt_id								
+body_end	stmt_id	parent_stmt_id								
+new_array	attr	data_type	name							
+new_instance	type_parameters	target	data_type	args	static_init	init	fields	member_methods	nested	
+load_mem	target	address								
+store_mem	address	source								
+addr_of	target	address								
