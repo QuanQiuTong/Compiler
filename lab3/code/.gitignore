@@ -166,7 +166,6 @@ cython_debug/
 *.dll
 *.exe
 *.o
-*.so
 *.elc
 *.pyc
 \#*
