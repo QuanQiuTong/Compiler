@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import pprint
 from tree_sitter import Node
 from . import common_parser
 
@@ -149,125 +150,102 @@ class Parser(common_parser.Parser):
         return (shadow_object, shadow_field)
 
     def assignment_expression(self, node: Node, statements: list):
-        left = self.find_child_by_field(node, "left")
-        right = self.find_child_by_field(node, "right")
-        operator = self.find_child_by_field(node, "operator")
-        shadow_operator = self.read_node_text(operator).replace("=", "")
-
-        shadow_right = self.parse(right, statements)
-
-        # week3任务，需要支持left为object.property的形式，可以用parser_field函数帮助解析
-        if left.type  == "member_expression":
-            shadow_object, field = self.parse_field(left, statements)
-            if not shadow_operator:
-                statements.append(
-                    {"field_write": {"receiver_object": shadow_object, "field": field, "source": shadow_right}})
-                return shadow_right
-
-            tmp_var = self.tmp_variable(statements)
-            statements.append({"field_read": {"target": tmp_var, "receiver_object": shadow_object, "field": field, }})
-            tmp_var2 = self.tmp_variable(statements)
-            statements.append({"assign_stmt":
-                                   {"target": tmp_var2, "operator": shadow_operator,
-                                    "operand": tmp_var, "operand2": shadow_right}})
-            statements.append({"field_write": {"receiver_object": shadow_object, "field": field, "source": tmp_var2}})
-
-            return tmp_var2
-
-        shadow_left = self.read_node_text(left)
-        if not shadow_operator:
-            statements.append({"assign_stmt": {"target": shadow_left, "operand": shadow_right}})
+        shadow_right = self.parse(self.find_child_by_field(node, "right"), statements)
+        if self.find_child_by_field(node, "left").type == "member_expression":
+            object, field = self.parse_field(self.find_child_by_field(node, "left"), statements)
+            statements.append({
+                "field_write": {
+                    "receiver_object": object,
+                    "field": field,
+                    "source": shadow_right
+                }
+            })
+            return {
+                "field_read": {
+                    "receiver_object": object,
+                    "field": field
+                }
+            }
         else:
-            statements.append({"assign_stmt": {"target": shadow_left, "operator": shadow_operator,
-                                               "operand": shadow_left, "operand2": shadow_right}})
-        return shadow_left
+            shadow_left = self.read_node_text(self.find_child_by_field(node, "left"))
+            statements.append({"assign_stmt": {
+                "target": shadow_left,
+                "operand": shadow_right
+            }})
+            return shadow_left
 
-    def method_declaration(self, node: Node, statements: list):
-        child = self.find_child_by_field(node, "return_type")
-        mytype = self.read_node_text(child.named_child(0)) if child else None
-
-        attrs = [
-            self.read_node_text(m)
-            for m in self.find_children_by_type(node, "accessibility_modifier")
-        ]
-
-        child = self.find_child_by_field(node, "name")
-        name = self.read_node_text(child)
-
-        parameters = []
-        params = self.find_child_by_field(node, "parameters")
-        self.formal_parameter(params, parameters)
-
-        new_body = []
-        child = self.find_child_by_field(node, "body")
-        if child:
-            for stmt in child.named_children:
-                if self.is_comment(stmt):
-                    continue
-
-                self.parse(stmt, new_body)
-
-        statements.append(
-            {"method_decl": {"attrs":attrs, "data_type": mytype, "name": name, "parameters": parameters, "body": new_body}})
+    def method_declaration(self,node,statements):
+        method_decl: dict[str, str] = {}
+        method_decl['name'] = self.read_node_text(self.find_child_by_field(node, "name"))
+        if self.find_child_by_field(node, "return_type"):
+            method_decl['data_type'] = method_decl['data_type'] = self.read_node_text(self.find_child_by_field(node, "return_type").named_children[0]) # 去掉冒号
+        attrs: list[str] = []
+        for child in node.named_children:
+            if child.type == "accessibility_modifier":
+                attrs.append(self.read_node_text(child))
+        method_decl['attrs'] = attrs
+        new_param: list = []
+        self.formal_parameter(self.find_child_by_field(node, "parameters"), new_param)
+        method_decl['parameters'] = new_param
+        new_body: list = []
+        self.statement_block(self.find_child_by_field(node, "body"), new_body)
+        method_decl['body'] = new_body
+        statements.append({'method_decl': method_decl})
+        return method_decl
+        #week3任务，需要支持参数，可以用formal_parameter函数帮助解析
 
     def formal_parameter(self, node: Node, statements: list):
-        # week3任务，解析参数
-        if not node:
-            return
-        for param in node.named_children:
-            child = self.find_child_by_type(param, "modifiers")
-            modifiers = self.read_node_text(child).split()
-
-            mytype = self.find_child_by_field(param, "type").named_child(0)
-            shadow_type = self.read_node_text(mytype)
-
-            if "[]" in shadow_type:
-                modifiers.append("array")
-
-            name = self.find_child_by_field(param, "pattern")
-            shadow_name = self.read_node_text(name)
-
-            statements.append({"parameter_decl": {"attr": modifiers, "data_type": shadow_type, "name": shadow_name}})
+        for child in node.named_children:
+            statements.append({
+                'parameter_decl':{
+                    'name': self.read_node_text(self.find_child_by_field(child, "pattern")),
+                    'data_type': self.read_node_text(self.find_child_by_field(child, "type").named_children[0])
+                    }
+            })
 
     def class_declaration(self, node: Node, statements: list):
-        glang_node = {
-            "attrs": [], # "class" 可能是为了区分interface?
-            "fields": [],
-            "member_methods": []
-            # "nested" = [] # subclass
-        }
+        #week3任务，解析class,class_body部分可用class_body函数帮助解析
+        # print(f"class_declaration: {node}")
+        class_decl: dict[str] = {}
+        class_decl['name'] = self.read_node_text(self.find_child_by_field(node, "name"))
+        # new_body = []
+        self.class_body(self.find_child_by_field(node, "body"), class_decl)
+        # class_decl['body'] = new_body
+        statements.append({'class_decl': class_decl})
+        return {'class_decl': class_decl}
 
-        child = self.find_child_by_type(node, "modifiers")
-        modifiers = self.read_node_text(child).split()
-        glang_node["attrs"].extend(modifiers)
-
-        child = self.find_child_by_field(node, "name")
-        if child:
-            glang_node["name"] = self.read_node_text(child)
-
-        child = self.find_child_by_field(node, "body")
-        if child:
-            self.class_body(child, glang_node)
-
-        statements.append({"class_decl": glang_node})
-
-    def class_body(self, node: Node, gir_node: dict):
-        # week3任务，解析class_body部分，需要解析类的字段与成员函数
-        for child in self.find_children_by_type(node, "public_field_definition"):
-            self.public_field_definition(child, gir_node["fields"])
-
-        for child in self.find_children_by_type(node, "method_definition"):
-            self.method_declaration(child, gir_node["member_methods"])
+    def class_body(self, node, class_decl: dict[str]):
+        #week3任务，解析class_body部分，需要解析类的字段与成员函数
+        statements: list = []
+        for child in node.named_children:
+            if self.is_comment(child):
+                continue
+            else:
+                self.parse(child, statements)
+        for child in statements:
+            print(child)
+            key = list(child.keys())
+            assert len(key) == 1
+            if key[0] not in class_decl:
+                class_decl[key[0]] = []
+            class_decl[key[0]].append(child)
+        print()
 
     def public_field_definition(self, node: Node, statements: list):
-        attrs = [
-            self.read_node_text(m)
-            for m in self.find_children_by_type(node, "accessibility_modifier")
-        ]
-        name = self.read_node_text(self.find_child_by_field(node, "name"))
-        t = self.find_child_by_field(node, "type")
-        type = self.read_node_text(t.named_child(0)) if t else None
-        statements.append({"variable_decl":{"attrs":attrs, "name":name, "data_type":type}})
+        #week3任务, 解析类的字段
+        # print(f"public_field_definition: {node}, {self.read_node_text(node)}\n")
+        variable_decl: dict[str] = {}
+        variable_decl['name'] = self.read_node_text(self.find_child_by_field(node, "name"))
+        if self.find_child_by_field(node, "type"):
+            variable_decl['data_type'] = self.read_node_text(self.find_child_by_field(node, "type").named_children[0])
+        attrs: list[str] = []
+        for child in node.named_children:
+            if child.type == "accessibility_modifier":
+                attrs.append(self.read_node_text(child))
+        variable_decl['attrs'] = attrs
+        statements.append({'variable_decl': variable_decl})
+        # print(variable_decl)
+        return {'variable_decl': variable_decl}
 
     # field_read表达式，解析如this.name操作，返回临时变量
     def member_expression(self, node: Node, statements: list,flag = 0):

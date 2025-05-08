@@ -125,11 +125,14 @@ class Parser(common_parser.Parser):
     def non_null_expression(self, node: Node, statements: list):
         self.parse(node.named_children[0], statements)
 
+
+
     def pattern(self, node: Node, statements: list):
         return self.parse(self.node.named_children[0], statements)
 
+
     def parse_private_property_identifier(self, node: Node, statements: list):
-        return self.read_node_text(node)
+            return self.read_node_text(node)
 
     def parse_sequence_expression(self, node: Node, statements: list):
         sub_expressions = node.named_children
@@ -156,7 +159,7 @@ class Parser(common_parser.Parser):
 
         shadow_right = self.parse(right, statements)
 
-        # week3任务，需要支持left为object.property的形式，可以用parser_field函数帮助解析
+        #week3任务，需要支持left为object.property的形式，可以用parser_field函数帮助解析
         if left.type  == "member_expression":
             shadow_object, field = self.parse_field(left, statements)
             if not shadow_operator:
@@ -186,18 +189,14 @@ class Parser(common_parser.Parser):
         child = self.find_child_by_field(node, "return_type")
         mytype = self.read_node_text(child.named_child(0)) if child else None
 
-        attrs = [
-            self.read_node_text(m)
-            for m in self.find_children_by_type(node, "accessibility_modifier")
-        ]
-
         child = self.find_child_by_field(node, "name")
         name = self.read_node_text(child)
 
         parameters = []
         params = self.find_child_by_field(node, "parameters")
-        self.formal_parameter(params, parameters)
-
+        if params:
+            self.formal_parameter(params, parameters)
+            
         new_body = []
         child = self.find_child_by_field(node, "body")
         if child:
@@ -208,17 +207,15 @@ class Parser(common_parser.Parser):
                 self.parse(stmt, new_body)
 
         statements.append(
-            {"method_decl": {"attrs":attrs, "data_type": mytype, "name": name, "parameters": parameters, "body": new_body}})
+            {"method_decl": {"data_type": mytype, "name": name, "parameters": parameters, "body": new_body}})
 
     def formal_parameter(self, node: Node, statements: list):
-        # week3任务，解析参数
-        if not node:
-            return
+        #week3任务，解析参数
         for param in node.named_children:
             child = self.find_child_by_type(param, "modifiers")
             modifiers = self.read_node_text(child).split()
 
-            mytype = self.find_child_by_field(param, "type").named_child(0)
+            mytype = self.find_child_by_field(param, "type")
             shadow_type = self.read_node_text(mytype)
 
             if "[]" in shadow_type:
@@ -228,18 +225,19 @@ class Parser(common_parser.Parser):
             shadow_name = self.read_node_text(name)
 
             statements.append({"parameter_decl": {"attr": modifiers, "data_type": shadow_type, "name": shadow_name}})
+        
 
     def class_declaration(self, node: Node, statements: list):
         glang_node = {
-            "attrs": [], # "class" 可能是为了区分interface?
+            "attr": ["class"],
             "fields": [],
-            "member_methods": []
+            "methods": []
             # "nested" = [] # subclass
         }
 
         child = self.find_child_by_type(node, "modifiers")
         modifiers = self.read_node_text(child).split()
-        glang_node["attrs"].extend(modifiers)
+        glang_node["attr"].extend(modifiers)
 
         child = self.find_child_by_field(node, "name")
         if child:
@@ -251,23 +249,34 @@ class Parser(common_parser.Parser):
 
         statements.append({"class_decl": glang_node})
 
-    def class_body(self, node: Node, gir_node: dict):
-        # week3任务，解析class_body部分，需要解析类的字段与成员函数
-        for child in self.find_children_by_type(node, "public_field_definition"):
-            self.public_field_definition(child, gir_node["fields"])
+    def class_body(self, node, gir_node):
+        children = self.find_children_by_type(node, "public_field_definition")
+        if children:
+            for child in children:
+                statements = []
 
-        for child in self.find_children_by_type(node, "method_definition"):
-            self.method_declaration(child, gir_node["member_methods"])
+                self.parse(child, statements)
+                if statements:
+                    for stmt in statements:
+                        # if "variable_decl" in stmt:
+                        #     gir_node["fields"].append(stmt)
+                        # elif "constant_decl" in stmt:
+                            gir_node["fields"].append(stmt)
 
+        for st in ["constructor_declaration", "method_definition"]:
+            children = self.find_children_by_type(node, st)
+            if not children:
+                continue
+
+            for child in children:
+                self.parse(child, gir_node["methods"])
+                   
     def public_field_definition(self, node: Node, statements: list):
-        attrs = [
-            self.read_node_text(m)
-            for m in self.find_children_by_type(node, "accessibility_modifier")
-        ]
-        name = self.read_node_text(self.find_child_by_field(node, "name"))
-        t = self.find_child_by_field(node, "type")
-        type = self.read_node_text(t.named_child(0)) if t else None
-        statements.append({"variable_decl":{"attrs":attrs, "name":name, "data_type":type}})
+        am = self.find_child_by_type(node,"accessibility_modifier")
+        modifiler = self.read_node_text(am) if am else None 
+        name = self.read_node_text(self.find_child_by_field(node,"name"))
+        type = self.read_node_text(self.find_child_by_field(node,"type").named_child(0))
+        statements.append({"variable_decl":{"attr":modifiler, "name":name, "data_type":type}})
 
     # field_read表达式，解析如this.name操作，返回临时变量
     def member_expression(self, node: Node, statements: list,flag = 0):
@@ -312,3 +321,5 @@ class Parser(common_parser.Parser):
 
     def expression_statement(self, node: Node, statements: list):
         return self.parse(node.named_children[0], statements)
+
+
