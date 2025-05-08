@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 
 import ast
@@ -118,7 +117,6 @@ class StmtDefUseAnalysis:
             )
         )
 
-
     def use_stmt_defuse(self, stmt_id, stmt):
         used_symbol_list = []
         for symbol in [stmt.name]:
@@ -134,9 +132,6 @@ class StmtDefUseAnalysis:
             )
         )
 
-
-
-
     def variable_decl_defuse(self, stmt_id, stmt):
         defined_symbol = self.create_symbol_state_and_add_space(stmt_id, stmt.name, stmt.data_type, state_type = StateKind.UNSOLVED)
         status = StmtStatus(
@@ -145,8 +140,6 @@ class StmtDefUseAnalysis:
                 operation = ComputeOperation.VARIABLE_DECL
             )
         self.add_def_use_status(status)
-
-
 
     def method_decl_defuse(self, stmt_id, stmt):
         # self.empty_def_use(stmt_id, stmt)
@@ -160,33 +153,22 @@ class StmtDefUseAnalysis:
         )
 
     def assign_stmt_defuse(self, stmt_id, stmt):
-        # assign_stmt作为例子，了解add_def_use_symbols的用法
         self.add_def_use_symbols(stmt_id, stmt.target, [stmt.operand, stmt.operand2])
-
-
-
 
     def call_stmt_def_use(self, stmt_id, stmt):
         # convert stmt.args(str) to list
         args_list = []
         positional_args = ast.literal_eval(stmt.positional_args)
-        
-        args_list = [stmt.name]
-        for arg in positional_args:
-            args_list.append(arg)
-        self.add_def_use_symbols(stmt_id, stmt.target, args_list)
 
-
+        self.add_def_use_symbols(stmt_id, stmt.target, [stmt.name] + positional_args)
 
     def array_read_def_use(self, stmt_id, stmt):
         self.add_def_use_symbols(stmt_id, stmt.target, [stmt.array, stmt.index])
-        
 
     def array_write_def_use(self, stmt_id, stmt):
         self.add_def_use_symbols(stmt_id, stmt.array, [stmt.array, stmt.index, stmt.source])
 
     def if_stmt_def_use(self, stmt_id, stmt):
-        # print("\t", stmt)
         self.add_def_use_symbols(stmt_id, None, [stmt.condition])
 
     def add_def_use_symbols(self, stmt_id, def_symbol = None, used_symbols = [], op =ComputeOperation.DATA_FLOW):
@@ -200,7 +182,7 @@ class StmtDefUseAnalysis:
                 )
 
         defined_symbol = self.create_symbol_state_and_add_space(stmt_id, def_symbol)
-        
+
         self.add_def_use_status(
             StmtStatus(
                 stmt_id,
