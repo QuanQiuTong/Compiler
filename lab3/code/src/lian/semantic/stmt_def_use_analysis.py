@@ -170,18 +170,24 @@ class StmtDefUseAnalysis:
         # convert stmt.args(str) to list
         args_list = []
         positional_args = ast.literal_eval(stmt.positional_args)
-        #lab3week1 work
+        
+        args_list = [stmt.name]
+        for arg in positional_args:
+            args_list.append(arg)
+        self.add_def_use_symbols(stmt_id, stmt.target, args_list)
 
 
 
     def array_read_def_use(self, stmt_id, stmt):
-        #lab3week1 work
+        self.add_def_use_symbols(stmt_id, stmt.target, [stmt.array, stmt.index])
+        
 
     def array_write_def_use(self, stmt_id, stmt):
-        #lab3week1 work
+        self.add_def_use_symbols(stmt_id, stmt.array, [stmt.array, stmt.index, stmt.source])
 
     def if_stmt_def_use(self, stmt_id, stmt):
-        #lab3week1 work
+        # print("\t", stmt)
+        self.add_def_use_symbols(stmt_id, None, [stmt.condition])
 
     def add_def_use_symbols(self, stmt_id, def_symbol = None, used_symbols = [], op =ComputeOperation.DATA_FLOW):
 

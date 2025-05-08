@@ -290,16 +290,64 @@ class Parser(common_parser.Parser):
 
     
     def formal_parameter(self, node: Node, statements: list):
+        # week3任务，解析参数
+        if not node:
+            return
+        for param in node.named_children:
+            child = self.find_child_by_type(param, "modifiers")
+            modifiers = self.read_node_text(child).split()
 
-        pass
+            mytype = self.find_child_by_field(param, "type").named_child(0)
+            shadow_type = self.read_node_text(mytype)
+
+            if "[]" in shadow_type:
+                modifiers.append("array")
+
+            name = self.find_child_by_field(param, "pattern")
+            shadow_name = self.read_node_text(name)
+
+            statements.append({"parameter_decl": {"attr": modifiers, "data_type": shadow_type, "name": shadow_name}})
 
     def class_declaration(self, node: Node, statements: list):
-        pass
+        glang_node = {
+            "attrs": [], # "class" 可能是为了区分interface?
+            "fields": [],
+            "member_methods": []
+            # "nested" = [] # subclass
+        }
 
-    def class_body(self, node, gir_node):
-        pass
+        child = self.find_child_by_type(node, "modifiers")
+        modifiers = self.read_node_text(child).split()
+        glang_node["attrs"].extend(modifiers)
+
+        child = self.find_child_by_field(node, "name")
+        if child:
+            glang_node["name"] = self.read_node_text(child)
+
+        child = self.find_child_by_field(node, "body")
+        if child:
+            self.class_body(child, glang_node)
+
+        statements.append({"class_decl": glang_node})
+
+    def class_body(self, node: Node, gir_node: dict):
+        # week3任务，解析class_body部分，需要解析类的字段与成员函数
+        for child in self.find_children_by_type(node, "public_field_definition"):
+            self.public_field_definition(child, gir_node["fields"])
+
+        for child in self.find_children_by_type(node, "method_definition"):
+            self.method_declaration(child, gir_node["member_methods"])
+
     def public_field_definition(self, node: Node, statements: list):
-        pass
+        attrs = [
+            self.read_node_text(m)
+            for m in self.find_children_by_type(node, "accessibility_modifier")
+        ]
+        name = self.read_node_text(self.find_child_by_field(node, "name"))
+        t = self.find_child_by_field(node, "type")
+        type = self.read_node_text(t.named_child(0)) if t else None
+        statements.append({"variable_decl":{"attrs":attrs, "name":name, "data_type":type}})
+
 
     def for_statement(self, node: Node, statements: list):
         init_children = self.find_children_by_field(node, "initializer")
