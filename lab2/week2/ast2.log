@@ -1,0 +1,29 @@
+(program 
+    (function_declaration 
+        name: (identifier) 
+        parameters: 
+        (formal_parameters 
+            (required_parameter 
+            pattern: (identifier) 
+            type: (type_annotation 
+                (predefined_type)) 
+            value: (number))) 
+        return_type: 
+            (type_annotation (predefined_type)) 
+        body: 
+        (statement_block 
+            (expression_statement 
+                (assignment_expression 
+                    left: (identifier) 
+                    right: (identifier))) 
+            (expression_statement 
+                (assignment_expression 
+                    left: 
+                    (subscript_expression 
+                        object: (identifier) 
+                        index: (number)) 
+                    right: (identifier))) 
+            (expression_statement 
+                (assignment_expression 
+                left: (identifier) 
+                right: (number))))))
