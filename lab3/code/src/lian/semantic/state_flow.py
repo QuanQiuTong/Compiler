@@ -211,6 +211,7 @@ class StateFlowAnalysis(InternalAnalysisTemplate):
             target_defined_symbol.set_id(common_id)
             # self.symbol_id_to_name[common_id] = target_defined_symbol.name
 
+
     @profile
     def reaching_symbol_analysis(self):
        
@@ -223,23 +224,24 @@ class StateFlowAnalysis(InternalAnalysisTemplate):
             old_outs = status.out_bits
 
             status.in_bits = 0
-            # TODO task1 how to collect in bits
             for parent_stmt_id in self.cfg.predecessors(stmt_id):
                 if parent_stmt_id in self.stmt_to_status:
+                    parent_out_bits = self.stmt_to_status[parent_stmt_id].out_bits
+                    # TODO task1 根据cfg准备并设置status.in_bits
                     pass
 
-            current_bits = status.in_bits
+            status.out_bits = status.in_bits
             # if current stmt has def
             defined_symbol_index = status.defined_symbol
             if defined_symbol_index != -1:
                 defined_symbol = self.symbol_state_space[defined_symbol_index]
                 if isinstance(defined_symbol, Symbol):
-                    # TODO task2 how to kill and gen to get current bits?
+                    # TODO task2 根据当前defined_symbol的all_def_stmts,通过self.bit_vector_manager,应用kill-gen算法对status.out_bits进行更新
+
                     pass
 
-            status.out_bits = current_bits
             
-            # TODO task3 how to determine if we reach fixed point?
+            # TODO task3 通过判断out_bits是否变化来判断是否到达不动点
             if False:
                 worklist = util.merge_list(worklist, list(self.cfg.successors(stmt_id)))
 
