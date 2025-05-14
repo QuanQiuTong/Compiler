@@ -647,16 +647,16 @@ class BitVectorManager:
             bit_vector = next_bit_vector
         return result
 
-    def kill_stmts(self, bit_vector, stmts):
-    # TODO how to kill stmts
-
-        return bit_vector
-
-    def gen_stmts(self, bit_vector, stmts):
-    # TODO how to gen stmts
+    # def kill_stmts(self, bit_vector, stmts):
+    # # TODO 实现kill,获取stmt对应的bit_pos，通过位操作更新bit_vector
     
-        return bit_vector
+    #     return bit_vector
+
+    # def gen_stmts(self, bit_vector, stmts):
+    # # TODO 实现gen,获取stmt对应的bit_pos，通过位操作更新bit_vector
     
+    #     return bit_vector
+
 
 
     def is_stmt_alive(self, bit_vector, stmt_id):

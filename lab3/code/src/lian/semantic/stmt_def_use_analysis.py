@@ -50,10 +50,11 @@ class StmtDefUseAnalysis:
             "variable_decl"                 : self.variable_decl_defuse,
             "method_decl"                   : self.method_decl_defuse,
             "assign_stmt"                   : self.assign_stmt_defuse,
-            "call_stmt"                     : self.call_stmt_def_use,
-            "array_write"                    : self.array_write_def_use,
-            "if_stmt"                       : self.if_stmt_def_use, 
-            "array_read"                    : self.array_read_def_use,
+            # "call_stmt"                     : self.call_stmt_def_use,
+            # "array_write"                    : self.array_write_def_use,
+            # "if_stmt"                       : self.if_stmt_def_use, 
+            # "array_read"                    : self.array_read_def_use,
+            "while_stmt"                    : self.while_stmt_def_use,
             
         }
 
@@ -165,7 +166,6 @@ class StmtDefUseAnalysis:
 
 
 
-
     def call_stmt_def_use(self, stmt_id, stmt):
         # convert stmt.args(str) to list
         args_list = []
@@ -173,14 +173,17 @@ class StmtDefUseAnalysis:
         #lab3week1 work
 
 
+    def while_stmt_def_use(self, stmt_id, stmt):
+        self.add_def_use_symbols(stmt_id, None, [stmt.condition])
 
-    def array_read_def_use(self, stmt_id, stmt):
-        #lab3week1 work
 
-    def array_write_def_use(self, stmt_id, stmt):
-        #lab3week1 work
+    # def array_read_def_use(self, stmt_id, stmt):
+    #     #lab3week1 work
 
-    def if_stmt_def_use(self, stmt_id, stmt):
+    # def array_write_def_use(self, stmt_id, stmt):
+    #     #lab3week1 work
+
+    # def if_stmt_def_use(self, stmt_id, stmt):
         #lab3week1 work
 
     def add_def_use_symbols(self, stmt_id, def_symbol = None, used_symbols = [], op =ComputeOperation.DATA_FLOW):
