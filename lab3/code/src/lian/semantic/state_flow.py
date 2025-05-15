@@ -31,7 +31,7 @@ from lian.semantic.internal_structure import (
     CallGraph
 )
 
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
+# logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 
 class StateFlowAnalysis(InternalAnalysisTemplate):
     def init(self):
@@ -228,7 +228,9 @@ class StateFlowAnalysis(InternalAnalysisTemplate):
                 if parent_stmt_id in self.stmt_to_status:
                     parent_out_bits = self.stmt_to_status[parent_stmt_id].out_bits
                     # TODO task1 根据cfg准备并设置status.in_bits
-                    pass
+
+                    # in_bits = merge all out_bits of parent cfg
+                    status.in_bits |= parent_out_bits
 
             status.out_bits = status.in_bits
             # if current stmt has def
@@ -237,12 +239,18 @@ class StateFlowAnalysis(InternalAnalysisTemplate):
                 defined_symbol = self.symbol_state_space[defined_symbol_index]
                 if isinstance(defined_symbol, Symbol):
                     # TODO task2 根据当前defined_symbol的all_def_stmts,通过self.bit_vector_manager,应用kill-gen算法对status.out_bits进行更新
-
-                    pass
-
+                    
+                    # name = defined_symbol.name
+                    # defs_to_kill = list(self.symbol_to_def_stmts.get(name, []))
+                    all_def_stmts = self.symbol_to_def_stmts[defined_symbol.name]
+                    print("\n")
+                    print(all_def_stmts)
+                    print("\n")
+                    status.out_bits = self.bit_vector_manager.kill_stmts(status.out_bits, all_def_stmts)
+                    status.out_bits = self.bit_vector_manager.gen_stmts(status.out_bits, [stmt_id])
             
             # TODO task3 通过判断out_bits是否变化来判断是否到达不动点
-            if False:
+            if status.out_bits != old_outs:
                 worklist = util.merge_list(worklist, list(self.cfg.successors(stmt_id)))
 
     def construct_symbol_dependency_graph(self):

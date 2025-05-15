@@ -647,15 +647,26 @@ class BitVectorManager:
             bit_vector = next_bit_vector
         return result
 
-    # def kill_stmts(self, bit_vector, stmts):
-    # # TODO 实现kill,获取stmt对应的bit_pos，通过位操作更新bit_vector
-    
-    #     return bit_vector
+    def kill_stmts(self, bit_vector, stmts):
+        # TODO 实现kill,获取stmt对应的bit_pos，通过位操作更新bit_vector
 
-    # def gen_stmts(self, bit_vector, stmts):
-    # # TODO 实现gen,获取stmt对应的bit_pos，通过位操作更新bit_vector
-    
-    #     return bit_vector
+        mask = 0
+        for stmt_id in stmts:
+            pos = self.find_bit_pos_by_stmt(stmt_id)
+            if pos >= 0:
+                mask |= (1 << pos)
+        # clear those bits
+        return bit_vector & ~mask
+
+    def gen_stmts(self, bit_vector, stmts):
+        # TODO 实现gen,获取stmt对应的bit_pos，通过位操作更新bit_vector
+        
+        mask = 0
+        for stmt_id in stmts:
+            pos = self.find_bit_pos_by_stmt(stmt_id)
+            if pos >= 0:
+                mask |= (1 << pos)
+        return bit_vector | mask
 
 
 
