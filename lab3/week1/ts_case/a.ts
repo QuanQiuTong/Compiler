@@ -13,3 +13,7 @@ function aaa() {
     d = arr[a]
     arr[b] = c 
 }
+for(;)
+{
+
+}
